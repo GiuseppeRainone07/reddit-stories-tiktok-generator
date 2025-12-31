@@ -1,3 +1,6 @@
 .env
 test-data/
 __pycache__/
+external/
+venv/
+results/
