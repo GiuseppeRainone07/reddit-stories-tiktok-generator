@@ -2,7 +2,6 @@ import os
 import shutil
 import requests
 
-
 class TikTokVideoGenerator:
     def __init__(self, api_url="http://localhost:9001", vectcut_dir="vectcut"):
         self.api_url = api_url
@@ -43,6 +42,8 @@ class TikTokVideoGenerator:
             "video_url": video_path,
             "track_name": track_name,
             "speed": speed,
+            "scale_x": 3.2, # Fixed scaling values for TikTok vertical format
+            "scale_y": 3.2,
             "volume": volume,
             "target_start": 0,
             "relative_index": 0
@@ -58,7 +59,7 @@ class TikTokVideoGenerator:
         print(f"Background video added successfully: {os.path.basename(video_path)}")
         return response
         
-    def add_voice_audio(self, audio_path, start=0, end=None, target_start=0, volume=1.0, speed=1.0, track_name="voice"):
+    def add_voice_audio(self, audio_path, start=0, end=None, target_start=0.2, volume=1.0, speed=1.0, track_name="voice"):
         if not self.draft_id:
             raise Exception("Draft ID is not set. Create a project first.")
 
@@ -79,7 +80,7 @@ class TikTokVideoGenerator:
         print(f"Voice audio added successfully: {os.path.basename(audio_path)}")
         return response
     
-    def add_subtitles(self, srt_url, time_offset=0, font="Nunito", font_size=5, font_color="#FFFFFF", transform_y=-0.8, background_color="#000000", background_alpha=0.3):
+    def  add_subtitles(self, srt_url, time_offset=0, font="Nunito", font_size=5, font_color="#FFFFFF", transform_y=-0.8):
         if not self.draft_id:
             raise Exception("Draft ID is not set. Create a project first.")
         
@@ -91,8 +92,8 @@ class TikTokVideoGenerator:
             "font_size": font_size,
             "font_color": font_color,
             "transform_y": transform_y,
-            "background_color": background_color,
-            "background_alpha": background_alpha
+            "bold": True,
+            "time_offset": 0.1
         }
 
         response = self._make_request("add_subtitle", data)
@@ -128,8 +129,15 @@ class TikTokVideoGenerator:
         if not self.draft_id:
             raise Exception("Draft ID is not set. Create a project first.")
         
+        user_home = os.path.expanduser("~")
+        capcut_draft_dir = os.path.join(user_home, "AppData", "Local", "CapCut", "User Data", "Projects", "com.lveditor.draft")
+
+        if not os.path.exists(capcut_draft_dir):
+            print(f"CapCut draft directory does not exist at {capcut_draft_dir}. Make sure CapCut is installed.")
+            return {"success": False, "error": "CapCut draft directory not found."}
+
         print("Saving draft...")
-        self.save_draft()
+        self.save_draft(os.path.join(capcut_draft_dir))
         
         draft_dir = self._find_draft_dir()
         if not draft_dir:
@@ -137,16 +145,9 @@ class TikTokVideoGenerator:
             print(f"   Looking in: {self.vectcut_dir}")
             return {"success": False, "error": "Draft folder not found."}
         
-        print(f"Draft folder located at: {draft_dir}")
-
-        user_home = os.path.expanduser("~")
-        capcut_draft_dir = os.path.join(user_home, "AppData", "Local", "CapCut", "User Data", "Projects", "com.lveditor.draft")
-
-        if not os.path.exists(capcut_draft_dir):
-            print(f"CapCut draft directory does not exist at {capcut_draft_dir}. Make sure CapCut is installed.")
-            return {"success": False, "error": "CapCut draft directory not found."}
-        
         dest = os.path.join(capcut_draft_dir, os.path.basename(draft_dir))
+        
+        print(f"Draft folder located at: {draft_dir}")
 
         if auto_copy:
             print(f"Importing draft into CapCut...")
