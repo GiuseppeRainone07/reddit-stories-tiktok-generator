@@ -1,35 +1,57 @@
 from dotenv import load_dotenv
 import os
 
+from tts import TTS
 from tiktok_video_generator import TikTokVideoGenerator
 
 load_dotenv()
 
 def main():
     VECTCUT_DIR = os.getenv("VECTCUT_DIR")
+    VECTCUT_PORT = os.getenv("VECTCUT_PORT", "9001")
     BG_VIDEO = os.getenv("BG_VIDEO")
-    VOICE_AUDIO = os.getenv("VOICE_AUDIO")
+    
+    STORY_FILE = os.getenv("STORY_FILE")
+    NARRATOR_GENDER = os.getenv("NARRATOR_GENDER", "f")
+    NARRATOR_VOICE = os.getenv("NARRATOR_VOICE", "heart")
+
+    # Remove this later on
     SUBTITLES_SRT = os.getenv("SUBTITLES_SRT")
 
+    if not STORY_FILE or not os.path.isfile(STORY_FILE):
+            raise FileNotFoundError("STORY_FILE environment variable is not set or file does not exist.")
+    if not BG_VIDEO or not os.path.isfile(BG_VIDEO):
+            raise FileNotFoundError("BG_VIDEO environment variable is not set or file does not exist.")
+    if not SUBTITLES_SRT or not os.path.isfile(SUBTITLES_SRT):
+            raise FileNotFoundError("SUBTITLES_SRT environment variable is not set or file does not exist.")
+
     try:
-        generator = TikTokVideoGenerator(api_url="http://localhost:9001", vectcut_dir=VECTCUT_DIR)
+        tts = TTS(result_folder="results", gender=NARRATOR_GENDER, voice=NARRATOR_VOICE)
+        generator = TikTokVideoGenerator(api_url=f"http://localhost:{VECTCUT_PORT}", vectcut_dir=VECTCUT_DIR)
+
+        print("Reading story text...")
+        with open(STORY_FILE, "r", encoding="utf-8") as f:
+            story_text = f.read()
+        print("Generating voice audio from story text...")
+
+        voice_audio_file_wav = tts.synthesize(story_text)
+        voice_audio_file = tts.convert_wav_to_mp3(voice_audio_file_wav)
 
         print("Generating TikTok video project...")
         generator.create_project(width=1080, height=1920)
 
         print("Adding background video...")
-        generator.add_background_video(video_path=BG_VIDEO, volume=0.2, speed=1.0, track_name="main")
+        generator.add_background_video(video_path=BG_VIDEO, volume=0.05, speed=1.0, track_name="main")
 
         print("Adding voice audio...")
-        generator.add_voice_audio(audio_path=VOICE_AUDIO, volume=1.0, track_name="voice", target_start=0)
+        generator.add_voice_audio(audio_path=voice_audio_file, volume=1.0, track_name="voice", target_start=0)
 
         print("Adding subtitles...")
         generator.add_subtitles(
             srt_url=SUBTITLES_SRT,
-            font_size=40,
+            font_size=30,
             font_color="#FFFFFF",
-            background_color="#000000",
-            background_alpha=0.8
+            transform_y=0
         )
         
         result = generator.save_and_import_to_capcut(auto_copy=True)
