@@ -1,6 +1,5 @@
 import whisperx
 import torch
-import os
 
 # Monkey-patch torch.load to use weights_only=False for compatibility
 _original_torch_load = torch.load
@@ -35,7 +34,7 @@ class Subtitles:
         millis = int((seconds - int(seconds)) * 1000)
         return f"{hrs:02d}:{mins:02d}:{secs:02d},{millis:03d}"
     
-    def generate_srt(self, result, output_path, words_per_subtitle=5):
+    def generate_srt(self, result, output_path, words_per_subtitle=5, audio_duration=None):
         with open(output_path, "w", encoding="utf-8") as f:
             subtitle_index = 1
 
@@ -56,7 +55,7 @@ class Subtitles:
                 if i + words_per_subtitle < len(all_words):
                     end_time = all_words[i + words_per_subtitle]["start"]
                 else:
-                    end_time = words_group[-1]["end"]
+                    end_time = audio_duration if audio_duration is not None else words_group[-1]["end"]
 
                 text = " ".join([w["word"] for w in words_group])
 
@@ -71,6 +70,10 @@ class Subtitles:
 
 
 if __name__ == "__main__":
+    import os
+    from dotenv import load_dotenv
+    load_dotenv()
+
     subtitles = Subtitles()
     AUDIO_FILE = os.getenv("AUDIO_FILE")
     print("AUDIO_FILE:", AUDIO_FILE)
