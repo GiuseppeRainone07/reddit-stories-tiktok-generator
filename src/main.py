@@ -57,7 +57,7 @@ def main():
             srt_url=subs_srt,
             font_size=36,
             font_color="#FFFFFF",
-            transform_y=0
+            transform_y=-0.2,
         )
         
         result = generator.save_and_import_to_capcut(auto_copy=True)
