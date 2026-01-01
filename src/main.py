@@ -69,7 +69,7 @@ def main():
     except Exception as e:
         print(f"An error occurred: {str(e)}")
         print("Troubleshooting:")
-        print("- Ensure the VECTCUT_DIR, BG_VIDEO, VOICE_AUDIO, and SUBTITLES_SRT environment variables are set correctly.")
+        print("- Ensure the environment variables are set correctly")
         print("- Ensure the VectCut API server is running")
         print("- Make sure all file paths are correct.")
         print("- Verify FFmpeg is available.")
