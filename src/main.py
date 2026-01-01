@@ -1,3 +1,4 @@
+import re
 from dotenv import load_dotenv
 import os
 import time
@@ -34,6 +35,7 @@ def main():
     os.makedirs(RESULTS_DIR, exist_ok=True)
 
     try:
+        print("Starting generation for TikTok video:\n", STORY_TITLE)
         tts = TTS(result_folder=RESULTS_DIR, gender=NARRATOR_GENDER, voice=NARRATOR_VOICE)
         subtitles_generator = Subtitles(result_folder=RESULTS_DIR, device="cpu", compute_type="int8")
         generator = TikTokVideoGenerator(api_url=f"http://localhost:{VECTCUT_PORT}", vectcut_dir=VECTCUT_DIR)
@@ -42,6 +44,7 @@ def main():
         print("Reading story text...")
         with open(STORY_FILE, "r", encoding="utf-8") as f:
             story_text = f.read()
+        story_text = re.sub(r"\s*\r?\n\s*", " ", story_text).strip()
         print("Generating voice audio from story text...")
 
         title_audio_file_wav, title_audio_duration = tts.synthesize(STORY_TITLE, name="title")

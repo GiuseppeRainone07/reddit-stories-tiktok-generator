@@ -1,3 +1,4 @@
+import re
 from kokoro import KPipeline
 import numpy as np
 import soundfile as sf
@@ -5,8 +6,10 @@ import os
 import subprocess
 from pydub import AudioSegment
 from pydub.silence import detect_leading_silence
+from abbreviations import PATTERN, ABBREVIATIONS
 
 class TTS:
+
     def __init__(self, result_folder = "results", gender="f", voice=None):
         if gender not in ["f", "m"]:
             raise ValueError("Gender must be 'f' or 'm'.")
@@ -41,20 +44,16 @@ class TTS:
         return output_path, len(trimmed_sound) / 1000.0  # duration in seconds
 
     def _expand_abbreviations(self, text):
-        abbreviations = {
-            "Dr.": "Doctor",
-            "Mr.": "Mister",
-            "Mrs.": "Misses",
-            "St.": "Saint",
-            "vs.": "versus",
-            "etc.": "et cetera",
-            "e.g.": "for example",
-            "i.e.": "that is",
-            "AITA": "Am I the asshole"
-        }
-        for abbr, full in abbreviations.items():
-            text = text.replace(abbr, full)
-        return text
+        def replacer(match):
+            abbr = match.group(0)
+            full = ABBREVIATIONS.get(abbr.lower())
+            if abbr.isupper():
+                return full.upper()
+            elif abbr.istitle():
+                return full.title()
+            else:
+                return full
+        return PATTERN.sub(replacer, text)
 
     def synthesize(self, text, speed=1.15, name="output"):
         text = self._expand_abbreviations(text)
