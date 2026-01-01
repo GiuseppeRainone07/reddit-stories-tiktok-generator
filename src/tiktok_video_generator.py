@@ -1,6 +1,9 @@
+import json
 import os
 import shutil
+import subprocess
 import requests
+import random
 
 class TikTokVideoGenerator:
     def __init__(self, api_url="http://localhost:9001", vectcut_dir="vectcut"):
@@ -33,9 +36,36 @@ class TikTokVideoGenerator:
         print(f"Project created with Draft ID: {self.draft_id}")
         return self.draft_id
     
-    def add_background_video(self, video_path, start=0, end=None, volume=0, speed=1.0, track_name="main"):
+    def _get_video_duration(self, video_path):
+        try:
+            result = subprocess.run(
+                ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "json", video_path],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+
+            info = json.loads(result.stdout)
+            duration = float(info["format"]["duration"])
+            return duration
+        except subprocess.CalledProcessError as e:
+            raise Exception(f"Failed to get video duration: {str(e)}")
+        except (KeyError, ValueError, json.JSONDecodeError) as e:
+            raise Exception(f"Error parsing ffprobe output: {str(e)}")
+
+    def add_background_video(self, video_path, volume=0, speed=1.0, track_name="main", duration=None):
         if not self.draft_id:
             raise Exception("Draft ID is not set. Create a project first.")
+        
+        original_duration = self._get_video_duration(video_path)
+        if duration is None:
+            duration = original_duration - 5 # exclude first 5 seconds
+        else:
+            duration = min(duration, original_duration - 5)
+
+        # Random start time calculation (to fit within original video duration)
+        start = random.choices(range(5, int(original_duration - duration + 1)))[0]
+        end = start + duration
 
         data = {
             "draft_id": self.draft_id,
@@ -46,20 +76,41 @@ class TikTokVideoGenerator:
             "scale_y": 3.2,
             "volume": volume,
             "target_start": 0,
-            "relative_index": 0
+            "relative_index": 0,
+            "start": start,
+            "end": end
         }
 
         if start is not None:
             data["start"] = start
         if end is not None:
             data["end"] = end
-            
+        
         response = self._make_request("add_video", data)
 
         print(f"Background video added successfully: {os.path.basename(video_path)}")
-        return response
+        return response, duration
+    
+    def add_initial_image(self, image_path, duration=3.0):
+        if not self.draft_id:
+            raise Exception("Draft ID is not set. Create a project first.")
         
-    def add_voice_audio(self, audio_path, start=0, end=None, target_start=0.2, volume=1.0, speed=1.0, track_name="voice"):
+        data = {
+            "draft_id": self.draft_id,
+            "image_url": image_path,
+            "track_name": "reddit_frame",
+            "scale_x": 0.8,
+            "scale_y": 0.8,
+            "start": 0,
+            "end": duration,
+            "relative_index": 0
+        }
+
+        response = self._make_request("add_image", data)
+        print(f"Initial image added successfully: {os.path.basename(image_path)}")
+        return response
+
+    def add_audio(self, audio_path, start=0, end=None, target_start=0, volume=1.0, speed=1.0, track_name="voice"):
         if not self.draft_id:
             raise Exception("Draft ID is not set. Create a project first.")
 
@@ -94,8 +145,10 @@ class TikTokVideoGenerator:
             "transform_y": transform_y,
             "scale_x": scale,
             "scale_y": scale,
+            "border_width": 70.0,
+            "border_color": "#000000",
+            "border_alpha": 1.0,
             "bold": True,
-            "time_offset": 0.1
         }
 
         response = self._make_request("add_subtitle", data)
