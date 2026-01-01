@@ -75,8 +75,7 @@ if __name__ == "__main__":
     AUDIO_FILE = os.getenv("AUDIO_FILE")
     print("AUDIO_FILE:", AUDIO_FILE)
     if not AUDIO_FILE or not os.path.isfile(AUDIO_FILE):
-        # raise FileNotFoundError("AUDIO_FILE environment variable is not set or file does not exist.")
-        AUDIO_FILE = "C:\\Alexxino\\.Prog\\py\\Projects\\reddit-stories-tiktok-generator\\results\\tts_output_0.wav"
+        raise FileNotFoundError("AUDIO_FILE environment variable is not set or file does not exist.")
     print("Performing transcription and alignment...")
     result = subtitles.transcribe(AUDIO_FILE)
     subtitles.generate_srt(result, "output.srt")
