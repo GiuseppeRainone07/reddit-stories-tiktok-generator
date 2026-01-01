@@ -1,11 +1,11 @@
 from kokoro import KPipeline
+import numpy as np
 import soundfile as sf
 import os
 import subprocess
 
 class TTS:
-    def __init__(self, result_folder, gender="f", voice=None):
-        os.makedirs(result_folder, exist_ok=True)
+    def __init__(self, result_folder = "results", gender="f", voice=None):
         if gender not in ["f", "m"]:
             raise ValueError("Gender must be 'f' or 'm'.")
         if voice is None:
@@ -20,12 +20,15 @@ class TTS:
     def synthesize(self, text, speed=1.15):
         pipeline = KPipeline(lang_code="a", repo_id='hexgrad/Kokoro-82M')
         generator = pipeline(text, voice=f"a{self.gender}_{self.voice}", speed=speed)
-        for i, (_, _, audio) in enumerate(generator):
-            filename = f"tts_output_{i}.wav"
-            filepath = os.path.join(self.result_folder, filename)
-            sf.write(filepath, audio, samplerate=24000)
-            print(f"Generated audio saved to {filepath}")
-        return os.path.abspath(filepath)
+
+        all_audio = []
+        for (_, _, audio) in generator:
+            all_audio.append(audio)
+
+        combined_audio = np.concatenate(all_audio, axis=0)
+        output_path = os.path.join(self.result_folder, "tts_output.wav")
+        sf.write(output_path, combined_audio, samplerate=24000)
+        return os.path.abspath(output_path)
     
     def convert_wav_to_mp3(self, wav_file_path):
         # Convert WAV to MP3 using ffmpeg

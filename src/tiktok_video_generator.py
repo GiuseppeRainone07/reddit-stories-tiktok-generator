@@ -33,7 +33,7 @@ class TikTokVideoGenerator:
         print(f"Project created with Draft ID: {self.draft_id}")
         return self.draft_id
     
-    def add_background_video(self, video_path, start=0, end=None, volume=0.2, speed=1.0, track_name="main"):
+    def add_background_video(self, video_path, start=0, end=None, volume=0, speed=1.0, track_name="main"):
         if not self.draft_id:
             raise Exception("Draft ID is not set. Create a project first.")
 
@@ -80,7 +80,7 @@ class TikTokVideoGenerator:
         print(f"Voice audio added successfully: {os.path.basename(audio_path)}")
         return response
     
-    def  add_subtitles(self, srt_url, time_offset=0, font="Nunito", font_size=5, font_color="#FFFFFF", transform_y=-0.8):
+    def  add_subtitles(self, srt_url, time_offset=0, font="Nunito", font_size=5, font_color="#FFFFFF", transform_y=-0.8, scale=0.8):
         if not self.draft_id:
             raise Exception("Draft ID is not set. Create a project first.")
         
@@ -92,6 +92,8 @@ class TikTokVideoGenerator:
             "font_size": font_size,
             "font_color": font_color,
             "transform_y": transform_y,
+            "scale_x": scale,
+            "scale_y": scale,
             "bold": True,
             "time_offset": 0.1
         }
