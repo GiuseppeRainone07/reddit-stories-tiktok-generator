@@ -41,14 +41,24 @@ def main():
             story_text = f.read()
         print("Generating voice audio from story text...")
 
-        voice_audio_file_wav = tts.synthesize(story_text)
+        title_audio_file_wav, title_audio_duration = tts.synthesize(STORY_TITLE, name="title")
+        title_audio_file_wav, title_audio_duration = tts.trim_silence(title_audio_file_wav)
+        title_audio_file = tts.convert_wav_to_mp3(title_audio_file_wav)
+
+        voice_audio_file_wav, voice_audio_duration = tts.synthesize(story_text, name="voice")
+        voice_audio_file_wav, voice_audio_duration = tts.trim_silence(voice_audio_file_wav)
         voice_audio_file = tts.convert_wav_to_mp3(voice_audio_file_wav)
+
+        mid_silence_duration = 0.4  # seconds
+
         initial_image_path = reddit_frame_image_generator.download_frame_image(text=STORY_TITLE)
 
         print("Generating TikTok video project...")
         generator.create_project(width=1080, height=1920)
 
         print("Adding background video...")
+        generator.add_background_video(video_path=BG_VIDEO, volume=0, speed=1.0, track_name="main", duration=title_audio_duration + voice_audio_duration + mid_silence_duration)
+
         print("Adding initial image...")
         generator.add_initial_image(image_path=initial_image_path, duration=title_audio_duration)
 
@@ -56,19 +66,22 @@ def main():
         ding_path = os.path.abspath(os.path.join("static", "ding.wav"))
         generator.add_audio(audio_path=ding_path, volume=1.0, track_name="ding", target_start=0)
 
+        print("Adding title audio...")
+        generator.add_audio(audio_path=title_audio_file, volume=1.0, track_name="title", target_start=0)
+
         print("Adding voice audio...")
-        generator.add_voice_audio(audio_path=voice_audio_file, volume=1.0, track_name="voice", target_start=0)
+        generator.add_audio(audio_path=voice_audio_file, volume=1.0, track_name="voice", target_start=title_audio_duration + mid_silence_duration)
 
         subs = subtitles_generator.transcribe(voice_audio_file_wav)
         subs_srt = os.path.join(RESULTS_DIR, "subtitles.srt")
-        subtitles_generator.generate_srt(subs, subs_srt, words_per_subtitle=1)
-
+        subtitles_generator.generate_srt(subs, subs_srt, words_per_subtitle=1, audio_duration=voice_audio_duration)
         print("Adding subtitles...")
         generator.add_subtitles(
             srt_url=subs_srt,
             font_size=36,
             font_color="#FFFFFF",
-            transform_y=-0.2,
+            transform_y=-0.05,
+            time_offset=title_audio_duration + mid_silence_duration,
         )
         
         result = generator.save_and_import_to_capcut(auto_copy=True)
