@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 import os
+import time
 
 from tts import TTS
 from tiktok_video_generator import TikTokVideoGenerator
@@ -9,6 +10,8 @@ from reddit_frame_image import RedditFrameImage
 load_dotenv()
 
 def main():
+    start = time.perf_counter()
+
     REQUIRED_VARS = ["AVATAR_PATH", "VECTCUT_DIR", "STORY_FILE", "BG_VIDEO", "STORY_TITLE"]
     for var_name in REQUIRED_VARS:
         if not os.getenv(var_name):
@@ -90,6 +93,9 @@ def main():
             print("TikTok video project generated and imported to CapCut successfully.")
         else:
             print(f"Failed to generate TikTok video project: {result.get('error')}")
+
+        end = time.perf_counter()
+        print(f"Total execution time: {end - start:.2f} seconds")
     except Exception as e:
         print(f"An error occurred: {str(e)}")
         print("Troubleshooting:")

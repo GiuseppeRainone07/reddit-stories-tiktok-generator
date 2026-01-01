@@ -40,7 +40,24 @@ class TTS:
 
         return output_path, len(trimmed_sound) / 1000.0  # duration in seconds
 
+    def _expand_abbreviations(self, text):
+        abbreviations = {
+            "Dr.": "Doctor",
+            "Mr.": "Mister",
+            "Mrs.": "Misses",
+            "St.": "Saint",
+            "vs.": "versus",
+            "etc.": "et cetera",
+            "e.g.": "for example",
+            "i.e.": "that is",
+            "AITA": "Am I the asshole"
+        }
+        for abbr, full in abbreviations.items():
+            text = text.replace(abbr, full)
+        return text
+
     def synthesize(self, text, speed=1.15, name="output"):
+        text = self._expand_abbreviations(text)
         pipeline = KPipeline(lang_code="a", repo_id='hexgrad/Kokoro-82M')
         generator = pipeline(text, voice=f"a{self.gender}_{self.voice}", speed=speed)
 

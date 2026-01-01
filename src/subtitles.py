@@ -1,3 +1,4 @@
+import re
 import whisperx
 import torch
 
@@ -34,6 +35,37 @@ class Subtitles:
         millis = int((seconds - int(seconds)) * 1000)
         return f"{hrs:02d}:{mins:02d}:{secs:02d},{millis:03d}"
     
+    def abbreviations(self, text: str) -> str:
+        ABBREVIATIONS = {
+            "mister": "Mr.",
+            "misses": "Mrs.",
+            "doctor": "Dr.",
+            "saint": "St.",
+            "versus": "vs.",
+            "et cetera": "etc.",
+            "for example": "e.g.",
+            "that is": "i.e.",
+            "am i the asshole": "AITA"
+        }
+        def replace(match):
+            phrase = match.group(0)
+            key = phrase.lower()
+            abbr = ABBREVIATIONS[key]
+    
+            if phrase.isupper():
+                return abbr.upper()
+            elif phrase[0].isupper():
+                return abbr
+            else:
+                return abbr.lower()
+    
+        pattern = r"\b(" + "|".join(
+            re.escape(k) for k in sorted(ABBREVIATIONS, key=len, reverse=True)
+        ) + r")\b"
+    
+        return re.sub(pattern, replace, text, flags=re.IGNORECASE)
+
+
     def generate_srt(self, result, output_path, words_per_subtitle=5, audio_duration=None):
         with open(output_path, "w", encoding="utf-8") as f:
             subtitle_index = 1
@@ -57,7 +89,8 @@ class Subtitles:
                 else:
                     end_time = audio_duration if audio_duration is not None else words_group[-1]["end"]
 
-                text = " ".join([w["word"] for w in words_group])
+                raw_text = " ".join([w["word"] for w in words_group])
+                text = self.abbreviations(raw_text).strip()
 
                 f.write(f"{subtitle_index}\n")
                 f.write(f"{self._format_timestamp(start_time)} --> {self._format_timestamp(end_time)}\n")
