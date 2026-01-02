@@ -1,4 +1,5 @@
 import re
+import sys
 from dotenv import load_dotenv
 import os
 import time
@@ -179,4 +180,7 @@ def main():
         print(f"Video {i} Caption: {caption}")
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1 and sys.argv[1] == "test":
+        test()
+    else:
+        main()
