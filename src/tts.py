@@ -6,7 +6,7 @@ import os
 import subprocess
 from pydub import AudioSegment
 from pydub.silence import detect_leading_silence
-from abbreviations import PATTERN, ABBREVIATIONS
+from replacements import CURSE_WORDS_PATTERN, PATTERN, ABBREVIATIONS
 
 class TTS:
 
@@ -53,7 +53,7 @@ class TTS:
                 return full.title()
             else:
                 return full
-        return PATTERN.sub(replacer, text)
+        return CURSE_WORDS_PATTERN.sub(replacer, PATTERN.sub(replacer, text))
 
     def synthesize(self, text, speed=1.15, name="output"):
         text = self._expand_abbreviations(text)
