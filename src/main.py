@@ -53,7 +53,7 @@ def test():
 def main():
     start = time.perf_counter()
 
-    REQUIRED_VARS = ["AVATAR_PATH", "VECTCUT_DIR", "STORY_FILE", "BG_VIDEO", "STORY_TITLE"]
+    REQUIRED_VARS = ["AVATAR_PATH", "VECTCUT_DIR", "BG_VIDEO"]
     for var_name in REQUIRED_VARS:
         if not os.getenv(var_name):
             raise EnvironmentError(f"{var_name} environment variable is not set.")
@@ -65,6 +65,13 @@ def main():
 
     HASHTAGS = "#fyp #foryou #reddit #redditstories #fullystory #storytime #redditreadings #reddit_tiktok"
 
+    POSTFULLY_URL = os.getenv("POSTFULLY_URL", "https://postfully.app/tools/reddit-post-template/")
+    AVATAR_PATH = os.getenv("AVATAR_PATH")
+
+    VECTCUT_DIR = os.getenv("VECTCUT_DIR")
+    VECTCUT_PORT = os.getenv("VECTCUT_PORT", "9001")
+    BG_VIDEO = os.getenv("BG_VIDEO")
+
     try:
         subtitles_generator = Subtitles(result_folder=RESULTS_DIR, device="cpu", compute_type="int8")
         generator = TikTokVideoGenerator(api_url=f"http://localhost:{VECTCUT_PORT}", vectcut_dir=VECTCUT_DIR)
@@ -72,13 +79,6 @@ def main():
     except Exception as e:
         print(f"Failed to initialize components: {str(e)}")
         return
-    
-    POSTFULLY_URL = os.getenv("POSTFULLY_URL", "https://postfully.app/tools/reddit-post-template/")
-    AVATAR_PATH = os.getenv("AVATAR_PATH")
-
-    VECTCUT_DIR = os.getenv("VECTCUT_DIR")
-    VECTCUT_PORT = os.getenv("VECTCUT_PORT", "9001")
-    BG_VIDEO = os.getenv("BG_VIDEO")
     
     os.makedirs(RESULTS_DIR, exist_ok=True)
 
@@ -102,10 +102,10 @@ def main():
             story_text = re.sub(r"\s*\r?\n\s*", " ", story_text).strip()
 
         NARRATOR_GENDER = os.getenv(f"NARRATOR_GENDER_{i+1}", "f") if NUM_OF_STORIES > 1 else os.getenv("NARRATOR_GENDER", "f")
-        NARRATOR_VOICE = os.getenv(f"NARRATOR_VOICE_{i+1}", "heart") if NUM_OF_STORIES > 1 else os.getenv("NARRATOR_VOICE", "heart")
+        NARRATOR_VOICE = os.getenv(f"NARRATOR_VOICE_{i+1}", "heart" if NARRATOR_GENDER == "f" else "adam") if NUM_OF_STORIES > 1 else os.getenv("NARRATOR_VOICE", "heart" if NARRATOR_GENDER == "f" else "adam")
 
         try:
-            print("Starting generation for TikTok video:\n", STORY_TITLE)
+            print(f"Starting generation for TikTok video ({i+1}) {STORY_TITLE}:\n")
 
             tts = TTS(result_folder=RESULTS_DIR, gender=NARRATOR_GENDER, voice=NARRATOR_VOICE)
             print("Generating voice audio from story title and text...")
@@ -160,9 +160,6 @@ def main():
             else:
                 print(f"Failed to generate TikTok video project: {result.get('error')}")
 
-            end = time.perf_counter()
-            print(f"Total execution time: {end - start:.2f} seconds")
-
             caption = generate_caption(STORY_TITLE, HASHTAGS, max_length=150)
             captions.append(caption)
         except Exception as e:
@@ -174,9 +171,12 @@ def main():
             print("- Verify FFmpeg is available.")
             print("- Make sure CapCut is installed")
 
+    end = time.perf_counter()
+    print(f"Total execution time: {end - start:.2f} seconds")
+    
     print("\nGenerated Captions:")
     for i, caption in enumerate(captions, 1):
         print(f"Video {i} Caption: {caption}")
 
 if __name__ == "__main__":
-    test()
+    main()
