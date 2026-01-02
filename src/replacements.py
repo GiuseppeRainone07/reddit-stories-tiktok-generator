@@ -1,6 +1,5 @@
 import re
 
-
 ABBREVIATIONS = {
     "afaik": "as far as I know",
     "brb": "be right back",
@@ -50,10 +49,36 @@ ABBREVIATIONS = {
     "ex-mil": "ex mother in law",
     "ex-fil": "ex father in law",
     "ex-bil": "ex brother in law",
-    "ex-sil": "ex sister in law"
+    "ex-sil": "ex sister in law",
+    "tifu": "today I fricked up",
+}
+
+CURSE_WORDS = {
+    "fuck": "frick",
+    "fucker": "fricker",
+    "fucked": "fricked",
+    "fucking": "fricking",
+    "shit": "poop",
+    "shitty": "poopy",
+    "damn": "darn",
+    "hell": "heck",
+    "bitch": "witch",
+    "bastard": "rascal",
+    "ass": "butt",
+    "asshole": "jerk",
+    "dick": "jerk",
+    "piss": "pee",
+    "pissed": "peeved",
+    "having sex": "making love",
+    "have sex": "make love",
 }
 
 PATTERN = re.compile(
     r'\b(' + '|'.join(re.escape(abbr) for abbr in ABBREVIATIONS) + r')\b',
+    re.IGNORECASE
+)
+
+CURSE_WORDS_PATTERN = re.compile(
+    r'\b(' + '|'.join(re.escape(word) for word in CURSE_WORDS) + r')\b',
     re.IGNORECASE
 )
