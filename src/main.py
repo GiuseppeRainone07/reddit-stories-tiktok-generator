@@ -91,11 +91,11 @@ def main():
             if not STORY_LINK:
                 raise EnvironmentError("STORY_LINK environment variable is not set.")
             try:
-                STORY_TITLE, story_text = fetch_reddit_data(STORY_LINK)
+                story_title, story_text = fetch_reddit_data(STORY_LINK)
             except Exception:
                 continue
         else:
-            STORY_TITLE = os.getenv(f"STORY_TITLE_{i+1}") if NUM_OF_STORIES > 1 else os.getenv("STORY_TITLE")
+            story_title = os.getenv(f"STORY_TITLE_{i+1}") if NUM_OF_STORIES > 1 else os.getenv("STORY_TITLE")
             STORY_FILE = os.getenv(f"STORY_FILE_{i+1}") if NUM_OF_STORIES > 1 else os.getenv("STORY_FILE")
             print("Reading story text...")
             with open(STORY_FILE, "r", encoding="utf-8") as f:
@@ -106,41 +106,50 @@ def main():
         NARRATOR_VOICE = os.getenv(f"NARRATOR_VOICE_{i+1}", "heart" if NARRATOR_GENDER == "f" else "adam") if NUM_OF_STORIES > 1 else os.getenv("NARRATOR_VOICE", "heart" if NARRATOR_GENDER == "f" else "adam")
 
         try:
-            print(f"Starting generation for TikTok video ({i+1}) {STORY_TITLE}:\n")
+            print(f"Starting generation for TikTok video ({i+1}) {story_title}:\n")
 
             tts = TTS(result_folder=RESULTS_DIR, gender=NARRATOR_GENDER, voice=NARRATOR_VOICE)
             print("Generating voice audio from story title and text...")
 
-            title_audio_file_wav, title_audio_duration = tts.synthesize(STORY_TITLE, name="title")
+            title_audio_file_wav, title_audio_duration = tts.synthesize(story_title, name="title")
             title_audio_file_wav, title_audio_duration = tts.trim_silence(title_audio_file_wav)
             title_audio_file = tts.convert_wav_to_mp3(title_audio_file_wav)
+            title_audio_file = tts.add_fade(title_audio_file, fade_in_duration=200, fade_out_duration=0)
 
             voice_audio_file_wav, voice_audio_duration = tts.synthesize(story_text, name="voice")
             voice_audio_file_wav, voice_audio_duration = tts.trim_silence(voice_audio_file_wav)
             voice_audio_file = tts.convert_wav_to_mp3(voice_audio_file_wav)
 
+            hook_duration = 0.3 # seconds
             mid_silence_duration = 0.4  # seconds
 
-            initial_image_path = reddit_frame_image_generator.download_frame_image(text=STORY_TITLE)
+            initial_image_path = reddit_frame_image_generator.download_frame_image(text=story_title)
+
+            total_intro_duration = title_audio_duration + mid_silence_duration + hook_duration
+            intro_duration_no_silence = title_audio_duration + hook_duration
 
             print("Generating TikTok video project...")
             generator.create_project(width=1080, height=1920)
 
             print("Adding background video...")
-            generator.add_background_video(video_path=BG_VIDEO, volume=0, speed=1.0, track_name="main", duration=title_audio_duration + voice_audio_duration + mid_silence_duration)
+            generator.add_background_video(video_path=BG_VIDEO, volume=0, speed=1.0, track_name="main", duration=total_intro_duration + voice_audio_duration)
 
             print("Adding initial image...")
-            generator.add_initial_image(image_path=initial_image_path, duration=title_audio_duration)
+            generator.add_initial_image(image_path=initial_image_path, duration=intro_duration_no_silence)
+
+            print("Adding engaging hook audio...")
+            hook_audio_path = os.path.abspath(os.path.join("static", "engaging-hook.mp3"))
+            generator.add_audio(audio_path=hook_audio_path, volume=0.3, track_name="hook", target_start=0)
 
             print("Adding ding sound...")
-            ding_path = os.path.abspath(os.path.join("static", "ding.wav"))
-            generator.add_audio(audio_path=ding_path, volume=1.0, track_name="ding", target_start=0)
+            ding_path = os.path.abspath(os.path.join("static", "ding.mp3"))
+            generator.add_audio(audio_path=ding_path, volume=1.0, track_name="ding", target_start=0.07)
 
             print("Adding title audio...")
-            generator.add_audio(audio_path=title_audio_file, volume=1.0, track_name="title", target_start=0)
+            generator.add_audio(audio_path=title_audio_file, volume=1.0, track_name="title", target_start=hook_duration)
 
             print("Adding voice audio...")
-            generator.add_audio(audio_path=voice_audio_file, volume=1.0, track_name="voice", target_start=title_audio_duration + mid_silence_duration)
+            generator.add_audio(audio_path=voice_audio_file, volume=1.0, track_name="voice", target_start=total_intro_duration)
 
             subs = subtitles_generator.transcribe(voice_audio_file_wav)
             subs_srt = os.path.join(RESULTS_DIR, "subtitles.srt")
@@ -151,7 +160,7 @@ def main():
                 font_size=36,
                 font_color="#FFFFFF",
                 transform_y=-0.05,
-                time_offset=title_audio_duration + mid_silence_duration,
+                time_offset=total_intro_duration,
             )
 
             result = generator.save_and_import_to_capcut(auto_copy=True)
@@ -161,7 +170,7 @@ def main():
             else:
                 print(f"Failed to generate TikTok video project: {result.get('error')}")
 
-            caption = generate_caption(STORY_TITLE, HASHTAGS, max_length=150)
+            caption = generate_caption(story_title, HASHTAGS, max_length=150)
             captions.append(caption)
         except Exception as e:
             print(f"An error occurred: {str(e)}")

@@ -42,6 +42,49 @@ class TTS:
         trimmed_sound.export(output_path, format=input_ext)
 
         return output_path, len(trimmed_sound) / 1000.0  # duration in seconds
+    
+    def add_fade(self, audio_path, output_path=None, fade_in_duration=500, fade_out_duration=500):
+        if not os.path.exists(audio_path):
+            raise FileNotFoundError(f"Input audio file not found: {audio_path}")
+        
+        input_ext = os.path.splitext(audio_path)[1].lower().lstrip('.')
+
+        if output_path is None:
+            output_path = audio_path.replace(f".{input_ext}", f"_faded.{input_ext}")
+        
+        sound = AudioSegment.from_file(audio_path, format=input_ext)
+
+        audio_duration = len(sound)
+
+        fade_in_duration = min(fade_in_duration, audio_duration // 2)
+        fade_out_duration = min(fade_out_duration, audio_duration // 2)
+        faded_sound = sound
+        if fade_in_duration > 0:
+            faded_sound = faded_sound.fade_in(fade_in_duration)
+        if fade_out_duration > 0:
+            faded_sound = faded_sound.fade_out(fade_out_duration)
+
+        export_params = {}
+        
+        if input_ext == 'wav':
+            # WAV: Use high bitrate and sample width
+            export_params = {
+                'format': 'wav',
+                'parameters': ['-acodec', 'pcm_s16le']  # 16-bit PCM (lossless)
+            }
+        elif input_ext == 'mp3':
+            # MP3: Use highest quality
+            export_params = {
+                'format': 'mp3',
+                'bitrate': '320k',  # Maximum MP3 bitrate
+                'parameters': ['-q:a', '0']  # Highest quality
+            }
+        else:
+            export_params = {'format': input_ext}
+        
+        faded_sound.export(output_path, **export_params)
+
+        return output_path
 
     def _expand_abbreviations(self, text):
         def replacer(match):
@@ -86,4 +129,4 @@ class TTS:
 
 if __name__ == "__main__":
     tts = TTS()
-    tts.synthesize("Hello, this is a text to speech synthesis test. Sounds pretty natural, right?")
+    tts.convert_wav_to_mp3("./static/ding.wav")

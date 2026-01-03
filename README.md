@@ -159,3 +159,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 - [Kokoro](https://github.com/hexgrad/kokoro) for TTS
 - OpenAI Whisper for the base transcription model
 - [VectCutAPI](https://github.com/sun-guannan/VectCutAPI) for video editing
+
+## Note
+
+This project is for educational and fun purposes only. Don't take it too seriously!
