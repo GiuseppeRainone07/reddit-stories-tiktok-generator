@@ -10,6 +10,24 @@ A Python application that generates TikTok-style videos from Reddit stories with
 - 🔄 **No Gaps**: Subtitles stay on screen continuously with no blank moments
 - ⚙️ **Engaging**: Optimized for TikTok viewing with attention-grabbing images and sounds
 
+## Hosted Demo
+
+You can try out a hosted demo of the application [here](https://huggingface.co/spaces/Alexxino/reddit-stories-tiktok-generator).
+
+The public demo generates TikTok-ready assets:
+- narration audio
+- word-aligned subtitles
+- Reddit-style frame image
+
+Due to platform limitations, CapCut automation is **disabled** in the demo.
+
+## Local Mode (Full Features)
+
+Running locally enables:
+- VectCutAPI
+- CapCut project creation
+- automatic import into CapCut
+
 ## Requirements
 
 - Python 3.8+
