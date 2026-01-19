@@ -1,3 +1,13 @@
+---
+title: Reddit Stories TikTok Generator
+emoji: 🎬
+colorFrom: purple
+colorTo: pink
+sdk: docker
+app_file: app.py
+pinned: false
+---
+
 # Reddit Stories TikTok Generator
 
 A Python application that generates TikTok-style videos from Reddit stories with text-to-speech narration and synchronized subtitles.
