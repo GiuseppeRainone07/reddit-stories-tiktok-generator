@@ -4,12 +4,12 @@ from dotenv import load_dotenv
 import os
 import time
 
-from tts import TTS
-from tiktok_video_generator import TikTokVideoGenerator
-from subtitles import Subtitles
-from reddit_frame_image import RedditFrameImage
-from reddit_story_fetcher import fetch_reddit_data
-from caption import generate_caption
+from src.tts import TTS
+from src.tiktok_video_generator import TikTokVideoGenerator
+from src.subtitles import Subtitles
+from src.reddit_frame_image import RedditFrameImage
+from src.reddit_story_fetcher import fetch_reddit_data
+from src.caption import generate_caption
 
 load_dotenv()
 

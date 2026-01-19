@@ -9,7 +9,7 @@ class RedditFrameImage:
 
     def download_frame_image(self, text, upvotes=67000, comments=4100):
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=False)
+            browser = p.chromium.launch(headless=True)
             page = browser.new_page()
 
             page.goto(self.postfully_url)

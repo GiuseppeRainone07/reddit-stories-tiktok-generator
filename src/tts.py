@@ -1,4 +1,3 @@
-import re
 from kokoro import KPipeline
 import numpy as np
 import soundfile as sf
@@ -6,7 +5,7 @@ import os
 import subprocess
 from pydub import AudioSegment
 from pydub.silence import detect_leading_silence
-from replacements import CURSE_WORDS_PATTERN, PATTERN, ABBREVIATIONS
+from src.replacements import CURSE_WORDS_PATTERN, PATTERN, ABBREVIATIONS
 
 class TTS:
 
