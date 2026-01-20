@@ -5,8 +5,6 @@ from src.pipeline import Pipeline
 pipeline = None
 
 def run_generator(story_title, story_text, narrator_gender, narrator_voice, avatar):
-    tmpdir = tempfile.mkdtemp()
-
     global pipeline
     tmpdir = tempfile.mkdtemp()
     if pipeline is None or pipeline.tts.gender != narrator_gender or pipeline.tts.voice != narrator_voice:

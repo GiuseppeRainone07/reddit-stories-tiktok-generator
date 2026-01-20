@@ -20,7 +20,7 @@ A Python application that generates TikTok-style videos from Reddit stories with
 - 🔄 **No Gaps**: Subtitles stay on screen continuously with no blank moments
 - ⚙️ **Engaging**: Optimized for TikTok viewing with attention-grabbing images and sounds
 
-## Hosted Demo
+## Hosted Demo (Limited Features)
 
 You can try out a hosted demo of the application [here](https://huggingface.co/spaces/Alexxino/reddit-stories-tiktok-generator).
 
@@ -31,6 +31,37 @@ The public demo generates TikTok-ready assets:
 
 Due to platform limitations, CapCut automation is **disabled** in the demo.
 
+## Docker Mode (Limited Features)
+
+You can run the application in Docker mode without installing dependencies locally. 
+
+This mode generates TikTok-ready assets:
+- narration audio
+- word-aligned subtitles
+- Reddit-style frame image
+
+CapCut automation is **disabled** in Docker mode.
+
+To run in Docker mode:
+
+1. Build the Docker image:
+```bash
+docker build -t reddit-tiktok-generator .
+```
+
+2. Run the Docker container:
+```bash
+docker run --rm -it -p 7860:7860 reddit-tiktok-generator
+```
+
+You may want to mount a local directory to persist results:
+
+```bash
+docker run --rm -it -p 7860:7860 -v $(pwd)/results:/app/results reddit-tiktok-generator
+```
+
+3. Access the Gradio interface at `http://localhost:7860`
+
 ## Local Mode (Full Features)
 
 Running locally enables:
@@ -40,6 +71,7 @@ Running locally enables:
 
 ## Requirements
 
+- CapCut Desktop installed on your machine (you can download it from [here](https://www.capcut.com/tools/desktop-video-editor))
 - Python 3.8+
 - FFmpeg (for audio processing)
 
@@ -98,13 +130,13 @@ You need to provide:
 
 Run the main script:
 ```bash
-python src/main.py
+python main.py
 ```
 
 If you want to check if stories are being fetched correctly, you can run the test mode:
 
 ```bash
-python src/main.py test
+python main.py test
 ```
 
 This will print the fetched story text and exit without generating videos.
@@ -133,16 +165,24 @@ The generated SRT files follow this format:
 
 ```
 1
-00:00:00,031 --> 00:00:00,592
-Turns out I
+00:00:00,031 --> 00:00:00,131
+Well
 
 2
-00:00:00,592 --> 00:00:01,252
-was the only
+00:00:00,131 --> 00:00:00,612
+basically
 
 3
-00:00:01,252 --> 00:00:01,994
-one who didn't know.
+00:00:00,612 --> 00:00:00,692
+in
+
+4
+00:00:00,692 --> 00:00:00,912
+early
+
+5
+00:00:00,912 --> 00:00:01,292
+2024,
 ```
 
 ## Troubleshooting
@@ -183,9 +223,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Acknowledgments
 
-- [WhisperX](https://github.com/m-bain/whisperX) for forced alignment
-- [Kokoro](https://github.com/hexgrad/kokoro) for TTS
-- OpenAI Whisper for the base transcription model
+- [WhisperX](https://github.com/m-bain/whisperX) for the transcription model and the forced alignment model
+- [Kokoro](https://github.com/hexgrad/kokoro) for text-to-speech
 - [VectCutAPI](https://github.com/sun-guannan/VectCutAPI) for video editing
 
 ## Note
