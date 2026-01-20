@@ -1,11 +1,18 @@
 import tempfile
 import gradio as gr
-from src.pipeline import generate_assets
+from src.pipeline import Pipeline
+
+pipeline = None
 
 def run_generator(story_title, story_text, narrator_gender, narrator_voice, avatar):
     tmpdir = tempfile.mkdtemp()
 
-    outputs = generate_assets(story_title, story_text, narrator_gender, narrator_voice, avatar, results_dir=tmpdir)
+    global pipeline
+    tmpdir = tempfile.mkdtemp()
+    if pipeline is None or pipeline.tts.gender != narrator_gender or pipeline.tts.voice != narrator_voice:
+        pipeline = Pipeline(narrator_gender=narrator_gender, narrator_voice=narrator_voice, avatar_path=avatar, results_dir=tmpdir)
+    
+    outputs = pipeline.generate_assets(story_title, story_text)
 
     return outputs["title_audio"], outputs["voice_audio"], outputs["subtitles"], outputs["frame_image"]
 
@@ -39,4 +46,4 @@ with gr.Blocks() as demo:
         outputs=[title_audio, voice_audio, subtitles, frame]
     )
 
-demo.launch()
+demo.launch(server_name="0.0.0.0", server_port=7860)
